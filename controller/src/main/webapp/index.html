@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Swagger UI</title>
+  <link href='http://fonts.googleapis.com/css?family=Droid+Sans:400,700' rel='stylesheet' type='text/css'/>
+  <link href='css/hightlight.default.css' media='screen' rel='stylesheet' type='text/css'/>
+  <link href='css/screen.css' media='screen' rel='stylesheet' type='text/css'/>
+  <script type="text/javascript" src="lib/shred.bundle.js" /></script>  
+  <script src='lib/jquery-1.8.0.min.js' type='text/javascript'></script>
+  <script src='lib/jquery.slideto.min.js' type='text/javascript'></script>
+  <script src='lib/jquery.wiggle.min.js' type='text/javascript'></script>
+  <script src='lib/jquery.ba-bbq.min.js' type='text/javascript'></script>
+  <script src='lib/handlebars-1.0.rc.1.js' type='text/javascript'></script>
+  <script src='lib/underscore-min.js' type='text/javascript'></script>
+  <script src='lib/backbone-min.js' type='text/javascript'></script>
+  <script src='lib/swagger.js' type='text/javascript'></script>
+  <script src='swagger-ui.js' type='text/javascript'></script>
+  <script src='lib/highlight.7.3.pack.js' type='text/javascript'></script>
+
+  <script type="text/javascript">
+  $(document).ready(function () {
+    var url = getHostPort(window.location.href.toString()) + "/api/api-docs";
+    var servers = null;
+
+    function loadSwaggerUI(url) {
+      window.swaggerUi = new SwaggerUi({
+        url:url,
+        dom_id: "swagger-ui-container",
+        onComplete: function(swaggerApi, swaggerUi){
+          $('pre code').each(function(i, e) {hljs.highlightBlock(e)});
+        },
+        onFailure: function(data) {
+          if(console) {
+            console.log("Unable to Load SwaggerUI");
+            console.log(data);
+          }
+        },
+        docExpansion: "none"
+      });
+      window.swaggerUi.load();
+    };
+
+    $(window).load(function() {
+      docs();
+    });
+
+    function getHostPort(url) {
+      var parts = url.split("/");
+      return parts[0] + "//" + parts[2];
+    }
+
+    function docs() {
+      loadSwaggerUI("http://localhost:8002/api/api-docs");
+    }
+
+    function getHostPort(url) {
+      var parts = url.split("/");
+      return parts[0] + "//" + parts[2];
+    }
+
+    function refreshServers() {
+      updateDropdown();
+    }
+
+    function updateDropdown() {
+      controllerSwagger.apis.register.clients(function(data) {
+        $('#servers').children().remove();
+        // add management server
+        $('#servers').append($('<option>', {id : "self"}).text(url));
+        var res = JSON.parse(data.content.data);
+        res.forEach(function(entry) {
+          $('#servers').append($('<option>', {id : entry.nodeType}).text(entry.publicResourceLocation));
+        })
+      })
+    }
+
+    function checkServers() {
+
+    }
+
+    function displayOperations() {
+      loadSwaggerUI($('#servers').val());
+    }
+
+    var controllerSwagger = new window.SwaggerApi({url: url, success: updateDropdown});
+    $("#refreshButton").click(function(){
+      refreshServers();
+    })
+    $("#servers").change(function(){
+      displayOperations();
+    })
+  });
+</script>
+
+<body>
+<div id='header'>
+  <div class="swagger-ui-wrap">
+    <a id="logo" href="http://swagger.wordnik.com">swagger</a>
+
+    <form id='api_selector'>
+      <div class='input'><select id='servers'></select></div>
+      <div class='input'><img id="refreshButton" src="images/refresh-icon-614x460.png" style="width:35px;height=35px"/></div>
+    </form>
+  </div>
+</div>
+<div id="message-bar" class="swagger-ui-wrap">&nbsp;</div>
+<div id="swagger-ui-container" class="swagger-ui-wrap">
+<div class="footer"></div>
+</body>
+</html>
